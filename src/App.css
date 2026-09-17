@@ -1,0 +1,373 @@
+:root {
+  color-scheme: dark;
+  --bg: #1e1e1e;
+  --panel: #252526;
+  --line: #333;
+  --txt: #d4d4d4;
+  --dim: #858585;
+  --accent: #007acc;
+  --caret: #569cd6;
+  --guide: rgba(78, 201, 176, 0.3);
+  --err: #f14c4c;
+  --warn: #cca700;
+  --ghost: #6e6e6e;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--txt);
+  font:
+    14px/1.5 Consolas,
+    Menlo,
+    monospace;
+}
+.ide {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+.bar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 12px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+.badge {
+  font-size: 11px;
+  opacity: 0.7;
+}
+.spacer {
+  flex: 1;
+}
+button,
+select {
+  background: #3c3c3c;
+  color: var(--txt);
+  border: 1px solid #555;
+  padding: 4px 10px;
+  cursor: pointer;
+}
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+button.on {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.split {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+.pane {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.pane.left {
+  border-right: 1px solid var(--line);
+}
+.pane-title {
+  padding: 6px 12px;
+  background: #2d2d2d;
+  border-bottom: 1px solid var(--line);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* ── editor cod: toolbar + gutter + overlay ghidaje ── */
+.codecol {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.insertbar {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+  flex-wrap: wrap;
+}
+.insertbar button {
+  font-size: 12px;
+  padding: 2px 8px;
+}
+.codewrap {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+.gutter {
+  overflow: hidden;
+  background: var(--bg);
+  border-right: 1px solid var(--line);
+  user-select: none;
+  padding: 12px 0;
+}
+.gln {
+  min-width: 3ch;
+  padding: 0 8px 0 12px;
+  text-align: right;
+  color: var(--dim);
+  height: 21px;
+}
+.gln.err {
+  color: var(--err);
+  font-weight: bold;
+}
+.editarea {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  background: var(--bg);
+}
+.guidelayer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  padding: 12px;
+  pointer-events: none;
+}
+.guides {
+  width: max-content;
+}
+.grow {
+  height: 21px;
+  display: flex;
+  align-items: stretch;
+}
+.grail {
+  width: 2ch;
+  border-left: 1px solid var(--guide);
+}
+.ghostext {
+  color: var(--ghost);
+  opacity: 0.8;
+  font-style: italic;
+}
+.code,
+.guides,
+.gutter {
+  font:
+    14px/21px Consolas,
+    Menlo,
+    monospace;
+  tab-size: 2;
+}
+.code {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 12px;
+  background: transparent;
+  color: var(--txt);
+  caret-color: var(--caret);
+  border: 0;
+  outline: none;
+  resize: none;
+  white-space: pre;
+  overflow: auto;
+  text-align: left;
+}
+
+/* ── vizualizare C++ cu numere de linie ── */
+.cppview {
+  flex: 1;
+  overflow: auto;
+  padding: 12px 0;
+  text-align: left;
+  font:
+    14px/21px Consolas,
+    Menlo,
+    monospace;
+}
+.cl {
+  display: flex;
+  min-width: max-content;
+}
+.cl .ln {
+  min-width: 3ch;
+  padding: 0 8px 0 12px;
+  text-align: right;
+  color: var(--dim);
+  user-select: none;
+}
+.cl .lc {
+  flex: 1;
+  padding-right: 12px;
+  white-space: pre;
+}
+
+.errors {
+  margin: 0;
+  padding: 8px 16px;
+  color: var(--err);
+  background: #2a1a1a;
+  list-style: none;
+  max-height: 30%;
+  overflow: auto;
+}
+pre.errors {
+  white-space: pre-wrap;
+  font-size: 12px;
+}
+.err-tag {
+  color: var(--err);
+}
+.warn-tag {
+  color: var(--warn);
+}
+.hint {
+  font-size: 12px;
+  opacity: 0.75;
+}
+.row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 12px;
+}
+
+/* ── mod blocuri: paletă + canvas curat ── */
+.blockpane {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+.palette {
+  width: 150px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--line);
+  background: var(--panel);
+  padding: 8px;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.pal-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.7;
+}
+.pcard {
+  background: #3c3c3c;
+  border: 1px solid #555;
+  border-left: 3px solid var(--accent);
+  padding: 6px 8px;
+  font-size: 13px;
+  cursor: grab;
+  user-select: none;
+}
+.pcard:hover {
+  background: #4a4a4a;
+}
+.pcard:active {
+  cursor: grabbing;
+}
+.canvas {
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
+  padding: 8px;
+}
+.blocks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.brow {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 4px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+}
+.brow:hover {
+  border-color: var(--line);
+  background: #2a2d2e;
+}
+.brow.open .btext {
+  color: #9cdcfe;
+}
+.brow.close .btext,
+.brow.mid .btext {
+  color: #c586c0;
+}
+.brow.comment .btext {
+  color: var(--dim);
+  font-style: italic;
+}
+.grip {
+  cursor: grab;
+  color: var(--dim);
+  user-select: none;
+  padding: 0 2px;
+}
+.grip:active {
+  cursor: grabbing;
+}
+.rail {
+  display: inline-flex;
+  align-self: stretch;
+}
+.vline {
+  width: 18px;
+  border-left: 1px solid #4ec9b0;
+  margin-left: 8px;
+}
+.btext {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: text;
+}
+.bedit {
+  flex: 1;
+  min-width: 0;
+  background: #1e1e1e;
+  border: 1px solid var(--accent);
+  color: var(--txt);
+  font: inherit;
+  outline: none;
+  padding: 0 4px;
+}
+.brow .x {
+  display: none;
+  padding: 0 7px;
+  font-size: 13px;
+}
+.brow:hover .x {
+  display: block;
+}
+.dropline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--accent);
+}
+.dropline:first-child {
+  top: -2px;
+}
+.dropline:last-child {
+  bottom: -2px;
+}

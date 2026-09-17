@@ -1,0 +1,176 @@
+SINTAXA PSEUDOCOD BAC — v1 (dicționar înghețat pentru MVP)
+=====================================================
+Scop: subset care acoperă ~90% din subiectele BAC. Fără tablouri, fără subprograme/funcții în v1. Doar variabile scalare.
+
+1. FORMĂ CANONICĂ vs. TOLERANȚĂ LA CITIRE
+-----------------------------------------
+- Afișarea canonică: litere mici la keywords, CU diacritice, spații simple, fără underscore, atribuire cu `←`, comparații cu `≤ ≥ ≠`.
+- La citire/parsare se acceptă automat și se normalizează la canonic:
+  - `<-` → `←` (alias permis). `:=` este RESPINS (eroare de sintaxă).
+  - fără diacritice → cu diacritice: `citeste`→`citește`, `cat timp`→`cât timp`, `pana cand`→`până când`, `daca`→`dacă`, `repetă`/`repeta`, `executa`→`execută`, `si`→`și`.
+  - case-insensitive la keywords: `DACA`, `Daca` → `dacă`.
+  - underscore → spațiu: `cât_timp` → `cât timp`, `pana_cand` → `până când`.
+  - pluralul tipului → singular canonic: `numere naturale` → `număr natural`,
+    `numere întregi` → `număr întreg`, `numere reale` → `număr real`.
+  - spații multiple → un spațiu. Keywords recunoscute doar cu forma normalizată.
+- Egalitatea în pseudocod este `=` (canonic); alias `==` acceptat și normalizat la `=`.
+- Diferența este `≠` (canonic); aliasuri `!=`, `<>` acceptate și normalizate la `≠`.
+- `≤` / `≥` canonice; aliasuri `<= → ≤`, `>= → ≥` acceptate și normalizate.
+
+2. TIPURI ȘI VARIABILE
+---------------------
+- Nume variabilă: `[a-zA-Z][a-zA-Z0-9_]*` (o literă + litere/cifre/underscore). Case-sensitive la variabile (nu la keywords).
+- Tipuri v1 (doar în `citește`, forma canonică la singular; pluralul e acceptat ca alias):
+  - `număr natural` (`numere naturale`) → C++ `unsigned int`
+  - `număr întreg` (`numere întregi`)   → C++ `int`
+  - `număr real` (`numere reale`)       → C++ `double`
+- Prima apariție determină declarația. Ordinea declarațiilor C++ = ordinea primei apariții în pseudocod, fiecare pe rând propriu, sus în `main`.
+  - `citește a (număr întreg)` → `int a;` + `cin >> a;`
+  - `b ← 0` (prima apariție, fără `citește`) → `int b = 0;` (default `int`).
+- Variabila de buclă `pentru` se declară implicit `int` în headerul `for`, nu se hoistează separat.
+- Redeclararea aceluiași nume cu alt tip = eroare.
+
+3. INSTRUCȚIUNI SIMPLE
+----------------------
+- Atribuire: `<var> ← <expresie>`
+  ex: `n ← 0`, `a ← a*100 + x`, `x ← [x/10]`
+- Citire: `citește <var> [, <var>]* [(<tip> [adnotare])]`
+  ex: `citește x (număr natural)`, `citește a,b (număr întreg)`
+  Dacă nu are tip explicit, se asumă număr natural și este adăugat automat. Toate variabilele din listă primesc același tip.
+  Adnotări indicative după tip (text liber, ex. `număr natural nenul`, `număr real
+  pozitiv`): păstrate în canonic, ignorate complet în C++ (nu schimbă codul).
+  Conținutul parantezei trebuie să ÎNCEAPĂ cu unul din cele 3 tipuri, altfel e eroare.
+- Comentarii pe linie proprie, cu `//` sau `#`:
+  ex: `// parcurgem cifrele`, `# variantă cu cât timp`
+  Pot conține orice text (inclusiv `;` sau `:=`) și pot sta oriunde între
+  instrucțiuni, inclusiv în blocuri. Păstrate în canonic la poziția lor,
+  emise ca `// ...` în C++. Comentariile la final de linie de cod NU sunt
+  permise în v1 (ex. `scrie a // afișează` e eroare).
+- Scriere: `scrie <var> [, <var>]*`
+  DOAR variabile simple, FĂRĂ expresii, FĂRĂ literali string în v1.
+  ex: `scrie n`, `scrie a,b`
+  C++: variabile lipite, fără separator: `scrie a,b` → `cout << a << b;`
+- Mai multe instrucțiuni SIMPLE pe aceeași linie fizică, despărțite prin `;`:
+  ex: `citește a (număr întreg); a ← a + 1; scrie a`
+  Permis doar între `citește` / atribuire / `scrie` (inclusiv `;` final tolerat:
+  `scrie a;`). Instrucțiunile de bloc (`dacă`/`cât timp`/`pentru`/`repetă`/
+  `până când`/`altfel`/`■`) stau singure pe linie — combinarea lor cu `;`
+  e eroare. Forma canonică expandează fiecare instrucțiune pe linia ei.
+
+4. EXPRESII ȘI OPERATORI v1
+---------------------------
+- Aritmetici: `+ - * / %` + paranteze `()`. Minus unar permis (`-1`, `-x`).
+- Împărțire `/` + modulo `%` pe întregi au semantica C++ (trunchiere). Fără `div`, `mod`, `^` în v1.
+- Parte întreagă: `[<expresie>]`
+  ex: `x ← [x/10]`
+  C++: se emite expresia AS-IS, FĂRĂ cast/floor (comportamentul este deja cel al lui `/` pe întregi).
+  ex: `[x/10]` → `x / 10` (fără `(int)`).
+- Comparații (canonic): `=  ≠  <  >  ≤  ≥` (aliasuri: `== → =`, `!=`/`<> → ≠`, `<= → ≤`, `>= → ≥`).
+  `=` în condiție = comparație, NICIODATĂ atribuire. Atribuirea e doar `←`.
+- Logici: `și  sau  nu` (+ alias `si → și`), paranteze obligatorii la mixare ambiguă.
+  ex: `cât timp x > 99 execută`, `dacă x > 9 atunci`, `până când k = 4`, `nu (a = b) sau c < 3`
+- Precedență (ca în C++): `nu` > `* / %` > `+ -` > comparații > `și` > `sau`. `[ ]` ca parantezele.
+
+5. STRUCTURI DE CONTROL + TERMINATORUL `■`
+-------------------------------------------
+- `■` pe linie proprie (eventual cu prefix grafic `└`) închide `dacă`, `cât timp`, `pentru`. Editorul îl adaugă automat când lipsește (placeholder pe linie goală; dispare la tastare, reapare la ștergere).
+- `repetă` NU se închide cu `■`; se închide cu linia de jos (`până când` / `cât timp`).
+- `altfel` stă la același nivel cu `dacă`, fără `■` propriu, maxim unul per `dacă`.
+
+  dacă:
+    dacă <cond> atunci
+      ...
+    [altfel
+      ...]
+    ■
+
+  cât timp:
+    cât timp <cond> execută
+      ...
+    ■
+
+  pentru (pas implicit 1; pas explicit constantă întreagă ≠ 0):
+    pentru <var> ← <start>, <stop> [, <pas>] execută
+      ...
+    ■
+    ex: `pentru i ← 1, n execută` / `pentru i ← n, 1, -1 execută` / `pentru i ← 1, 10, 2 execută`
+
+  repetă varianta 1 (oprire când cond e adevărată):
+    repetă
+      ...
+    până când <cond>
+
+  repetă varianta 2 (continuare cât cond e adevărată):
+    repetă
+      ...
+    cât timp <cond>
+    (fără `execută` pe linia de închidere — asta o deosebește de headerul `cât timp ... execută`)
+
+- Imbricarea se face prin indentare logică (AST), nu prin spații. Indentarea din text e ignorată la parsare, dar editorul o regenerează automat.
+
+6. VALIDARE (erori în română, pe linie)
+---------------------------------------
+- Greșeli blocante: keyword greșit, `:=`, lipsă `atunci`/`execută`, `altfel` fără `dacă` / dublu `altfel`, `până când` fără `repetă`, condiție goală, expresie invalidă, tip greșit la `citește` (lipsa tipului e permisă → `număr natural`), `scrie` cu expresii/stringuri, variabilă folosită înainte de `citește`/atribuire, redeclarare cu alt tip, pas `0` la `pentru`.
+  Lipsa `■` NU e eroare blocantă — editorul îl inserează automat.
+- Din modul cod → blocuri se trece DOAR dacă parsează 100%. Altfel comutatorul e blocat cu tooltip + squiggly roșu.
+- Din blocuri → cod se trece oricând (generarea e mereu validă).
+
+7. CONVERSIE C++ (read-only, Allman, program complet)
+-----------------------------------------------------
+- Schelet fix:
+  #include <iostream>
+  using namespace std;
+  int main()
+  {
+      // declarații + citiri în ordinea primei apariții, fiecare pe rând propriu
+      // corp
+      return 0;
+  }
+- Exemple:
+  `citește n (număr întreg)` → `int n;` + `cin >> n;` (rânduri separate)
+  `citește x (număr natural)` → `unsigned int x;` + `cin >> x;`
+  `citește a,b (număr întreg)` → `int a;` + `int b;` + `cin >> a >> b;`
+  `n ← 0` (prima apariție) → `int n = 0;` (altfel `n = 0;`)
+  `scrie n` → `cout << n;`
+  `scrie a,b` → `cout << a << b;`
+  `=` → `==`, `≠` → `!=`, `și` → `&&`, `sau` → `||`, `nu` → `!`
+  `pentru i ← 1, n execută` → `for(int i = 1; i <= n; i++)`
+  `pentru i ← n, 1, -1 execută` → `for(int i = n; i >= 1; i--)`
+  `pentru i ← 1, 10, 2 execută` → `for(int i = 1; i <= 10; i += 2)`
+  `cât timp n ≥ 0 execută` → `while(n >= 0)`
+  `dacă n = 10 atunci ... altfel ...` → `if(n == 10) ... else ...`
+  `[x/10]` → `x / 10` (fără cast)
+- `repetă...până când C` → `do ... while(neg(C))`; `repetă...cât timp C` → `do ... while(C)`.
+  Negație inteligentă (flip de semn, nu `!`, când e comparație simplă):
+  `a > b` ↔ `a ≤ b`, `a < b` ↔ `a ≥ b`, `a ≥ b` ↔ `a < b`, `a ≤ b` ↔ `a > b`,
+  `a = b` ↔ `a != b`, `a ≠ b` ↔ `a == b`; altfel `!(...)`.
+  ex: `până când k = 4` → `while(k != 4)`, `până când x > 9` → `while(x <= 9)`.
+- Stil: Allman (acolade pe rând propriu), indent 4 spații.
+- Panoul C++ arată mereu ULTIMA versiune validă + badge "nu reprezintă codul actual" când sursa are erori; nu dispare niciodată; se regenerează la click (buton), nu la fiecare tastă. Buton Copiere.
+
+8. TABEL PSEUDOCOD → C++ (canonic)
+-----------------------------------
+  `scrie n` → `cout << n;`
+  `citește n (număr întreg)` → `int n;` + `cin >> n;`
+  `citește n (număr natural)` → `unsigned int n;` + `cin >> n;`
+  `citește x (număr real)` → `double x;` + `cin >> x;`
+  `n ← 0` → `n = 0;` (sau `int n = 0;` la prima apariție)
+  `pentru i ← 1, n execută` → `for(int i = 1; i <= n; i++)`
+  `pentru i ← n, 1, -1 execută` → `for(int i = n; i >= 1; i--)`
+  `cât timp n ≥ 0 execută` → `while(n >= 0)`
+  `repetă ... până când C` → `do ... while(neg(C))`
+  `repetă ... cât timp C` → `do ... while(C)`
+  `dacă n = 10 atunci ... altfel ... ■` → `if(n == 10) ... else ...`
+  `x ← [x/10]` → `x = x / 10;`
+  `a ← a*100 + x` → `a = a * 100 + x;`
+
+9. COMPORTAMENT EDITOR (fără backend)
+-------------------------------------
+- Stânga pseudocod (linii grafice `┌ │ └■` randate via CSS/DOM, nu text), dreapta C++ read-only stil VSCode. Toolbar: toggle Blocuri|Cod, Regenerează C++, Copiază C++, Share, Exemple.
+- Modul blocuri: drag-and-drop structural + inserare automată `└■` placeholder pe linie goală; la tastare pe linia `■`, placeholderul dispare; la ștergere completă, reapare.
+- Tab-autocomplete: după `repetă` sugerează `până când ...` / `cât timp ...`; după `dacă ... atunci` sugerează opțional `altfel`; după `cât timp/pentru` completează `execută` + `■`.
+- Enter după opener (`... atunci` / `... execută` / `repetă` / `altfel`) inserează corp + închizător automat (`■`, respectiv `până când`), ca să nu tastezi niciodată `■`.
+- Tab pe linie goală inserează `■`-ul dedentat DOAR unde se așteaptă un închizător (înainte de o linie dedentată sau la EOF cu corp existent); niciodată la nivel 0, înaintea unui closer existent sau într-un `repetă` (ăla se închide cu `până când`); altfel Tab = indent 2 spații.
+- Conversie asistată între bucle (cât timp ↔ pentru ↔ repetă...) ca sugestii `Ctrl+.` / UI mouse; dacă e prea complex, doar în modul bloc în v1.
+- Persistență: localStorage autosave. Share: `#c=` + base64url din sursa canonică (fără compresie în v1; ~4KB suficient pentru BAC).
+- Stack: Web, React + Vite + TS + pnpm, parser handwritten fără dependențe, deploy static.

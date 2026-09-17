@@ -1,0 +1,21 @@
+/* Bază minimală dark, full-width, fără stiluri de schelet Vite. */
+:root {
+  color-scheme: dark;
+}
+* {
+  box-sizing: border-box;
+}
+html,
+body,
+#root {
+  height: 100%;
+}
+body {
+  margin: 0;
+  background: #1e1e1e;
+  color: #d4d4d4;
+  font:
+    14px/1.5 Consolas,
+    Menlo,
+    monospace;
+}
